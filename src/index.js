@@ -110,6 +110,7 @@ export default {
       // Only add the essential CORS headers needed for actual responses
       finalHeaders.set("Access-Control-Allow-Origin", origin || "*");
       finalHeaders.set("Access-Control-Allow-Credentials", "true");
+      finalHeaders.set("Access-Control-Expose-Headers", "Set-Cookie");
 
       // Update Location header if it was rewritten
       if (rewrittenLocation) {
