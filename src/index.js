@@ -86,49 +86,49 @@ export default {
       // Get the response body - use arrayBuffer for binary content
       const body = isBinary ? await response.arrayBuffer() : await response.text();
 
-      // Process response headers
-      const responseHeaders = Object.fromEntries(response.headers);
-
       // Rewrite Location header for redirects to use the proxy path
-      if (responseHeaders.location || responseHeaders.Location) {
-        const location = responseHeaders.location || responseHeaders.Location;
-        console.log(`Original redirect location: ${location}`);
+      let rewrittenLocation = null;
+      const locationHeader = response.headers.get("location") || response.headers.get("Location");
+
+      if (locationHeader) {
+        console.log(`Original redirect location: ${locationHeader}`);
 
         // Convert absolute URLs to use the proxy path
-        if (location.includes("glbg.servergi.com")) {
+        if (locationHeader.includes("glbg.servergi.com")) {
           try {
-            const locationUrl = new URL(location);
+            const locationUrl = new URL(locationHeader);
             // Rewrite /ISIMGLB/* to /api/glbajaj/*
-            const newPath = locationUrl.pathname.replace(/^\/ISIMGLB/, "/api/glbajaj");
-            responseHeaders.location = newPath;
-            responseHeaders.Location = newPath;
-            console.log(`Rewritten redirect location: ${newPath}`);
+            rewrittenLocation = locationUrl.pathname.replace(/^\/ISIMGLB/, "/api/glbajaj");
+            console.log(`Rewritten redirect location: ${rewrittenLocation}`);
           } catch (e) {
             console.error("Error parsing location URL:", e);
           }
-        } else if (location.startsWith("/ISIMGLB")) {
+        } else if (locationHeader.startsWith("/ISIMGLB")) {
           // Handle relative URLs that start with /ISIMGLB
-          const newPath = location.replace(/^\/ISIMGLB/, "/api/glbajaj");
-          responseHeaders.location = newPath;
-          responseHeaders.Location = newPath;
-          console.log(`Rewritten redirect location: ${newPath}`);
+          rewrittenLocation = locationHeader.replace(/^\/ISIMGLB/, "/api/glbajaj");
+          console.log(`Rewritten redirect location: ${rewrittenLocation}`);
         }
+      }
+
+      // Build response headers - preserve original headers and add CORS
+      const finalHeaders = new Headers(response.headers);
+      finalHeaders.set("Access-Control-Allow-Origin", origin || "*");
+      finalHeaders.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+      finalHeaders.set("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie");
+      finalHeaders.set("Access-Control-Allow-Credentials", "true");
+      finalHeaders.set("Access-Control-Max-Age", "86400");
+      finalHeaders.set("Access-Control-Expose-Headers", "Set-Cookie");
+
+      // Update Location header if it was rewritten
+      if (rewrittenLocation) {
+        finalHeaders.set("Location", rewrittenLocation);
       }
 
       // Return the response with CORS headers
       return new Response(body, {
         status: response.status,
         statusText: response.statusText,
-        headers: {
-          ...responseHeaders,
-          // Add CORS headers (these won't overwrite existing important headers like Content-Type)
-          "Access-Control-Allow-Origin": origin || "*",
-          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization, Cookie",
-          "Access-Control-Allow-Credentials": "true",
-          "Access-Control-Max-Age": "86400",
-          "Access-Control-Expose-Headers": "Set-Cookie",
-        },
+        headers: finalHeaders,
       });
     } catch (error) {
       console.error("Proxy error:", error);
