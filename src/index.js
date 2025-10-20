@@ -52,11 +52,25 @@ export default {
 
       console.log(`Proxying request to: ${targetUrl}`);
 
+      // Clone the headers and ensure proper handling
+      const requestHeaders = new Headers(request.headers);
+      
+      // Remove origin-specific headers that shouldn't be forwarded
+      requestHeaders.delete("origin");
+      requestHeaders.delete("referer");
+      
+      // Get request body for non-GET/HEAD methods
+      let requestBody = null;
+      if (request.method !== "GET" && request.method !== "HEAD") {
+        // Read body as arrayBuffer to preserve all data types
+        requestBody = await request.arrayBuffer();
+      }
+
       // Forward the request to the GL Bajaj server
       const modifiedRequest = new Request(targetUrl, {
         method: request.method,
-        headers: request.headers,
-        body: request.method !== "GET" && request.method !== "HEAD" ? await request.text() : null,
+        headers: requestHeaders,
+        body: requestBody,
       });
 
       // Make the request to the target server
@@ -107,11 +121,13 @@ export default {
         statusText: response.statusText,
         headers: {
           ...responseHeaders,
-          "Access-Control-Allow-Origin": origin,
+          // Add CORS headers (these won't overwrite existing important headers like Content-Type)
+          "Access-Control-Allow-Origin": origin || "*",
           "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization, Cookie",
           "Access-Control-Allow-Credentials": "true",
           "Access-Control-Max-Age": "86400",
+          "Access-Control-Expose-Headers": "Set-Cookie",
         },
       });
     } catch (error) {
@@ -153,9 +169,9 @@ function handleCORS(request) {
   return new Response(null, {
     status: 204,
     headers: {
-      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Origin": origin || "*",
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, Cookie",
       "Access-Control-Allow-Credentials": "true",
       "Access-Control-Max-Age": "86400",
     },
