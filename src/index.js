@@ -62,8 +62,15 @@ export default {
       // Make the request to the target server
       const response = await fetch(modifiedRequest);
 
-      // Get the response body
-      const body = await response.text();
+      // Check if the response is binary (e.g., an image)
+      const contentType = response.headers.get("content-type") || "";
+      const isBinary =
+        contentType.includes("image/") ||
+        contentType.includes("application/octet-stream") ||
+        contentType.includes("application/pdf");
+
+      // Get the response body - use arrayBuffer for binary content
+      const body = isBinary ? await response.arrayBuffer() : await response.text();
 
       // Process response headers
       const responseHeaders = Object.fromEntries(response.headers);
