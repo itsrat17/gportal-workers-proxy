@@ -30,9 +30,22 @@ export default {
     try {
       const url = new URL(request.url);
 
-      // Extract the path after /api/glbajaj
+      // Extract the path
       // e.g., /api/glbajaj/Login -> /ISIMGLB/Login
-      const path = url.pathname.replace(/^\/api\/glbajaj/, "/ISIMGLB");
+      // or /ISIMGLB/Login -> /ISIMGLB/Login (direct path, for handling redirects)
+      let path;
+      if (url.pathname.startsWith('/api/glbajaj')) {
+        path = url.pathname.replace(/^\/api\/glbajaj/, "/ISIMGLB");
+      } else if (url.pathname.startsWith('/ISIMGLB')) {
+        path = url.pathname; // Keep as is
+      } else {
+        return new Response("Not Found - Invalid path", { 
+          status: 404,
+          headers: {
+            "Access-Control-Allow-Origin": origin,
+          }
+        });
+      }
 
       // Construct the target URL
       const targetUrl = `https://glbg.servergi.com:8072${path}${url.search}`;
@@ -52,12 +65,41 @@ export default {
       // Get the response body
       const body = await response.text();
 
+      // Process response headers
+      const responseHeaders = Object.fromEntries(response.headers);
+
+      // Rewrite Location header for redirects to use the proxy path
+      if (responseHeaders.location || responseHeaders.Location) {
+        const location = responseHeaders.location || responseHeaders.Location;
+        console.log(`Original redirect location: ${location}`);
+
+        // Convert absolute URLs to use the proxy path
+        if (location.includes('glbg.servergi.com')) {
+          try {
+            const locationUrl = new URL(location);
+            // Rewrite /ISIMGLB/* to /api/glbajaj/*
+            const newPath = locationUrl.pathname.replace(/^\/ISIMGLB/, '/api/glbajaj');
+            responseHeaders.location = newPath;
+            responseHeaders.Location = newPath;
+            console.log(`Rewritten redirect location: ${newPath}`);
+          } catch (e) {
+            console.error('Error parsing location URL:', e);
+          }
+        } else if (location.startsWith('/ISIMGLB')) {
+          // Handle relative URLs that start with /ISIMGLB
+          const newPath = location.replace(/^\/ISIMGLB/, '/api/glbajaj');
+          responseHeaders.location = newPath;
+          responseHeaders.Location = newPath;
+          console.log(`Rewritten redirect location: ${newPath}`);
+        }
+      }
+
       // Return the response with CORS headers
       return new Response(body, {
         status: response.status,
         statusText: response.statusText,
         headers: {
-          ...Object.fromEntries(response.headers),
+          ...responseHeaders,
           "Access-Control-Allow-Origin": origin,
           "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type, Authorization",
