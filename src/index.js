@@ -54,11 +54,11 @@ export default {
 
       // Clone the headers and ensure proper handling
       const requestHeaders = new Headers(request.headers);
-      
+
       // Remove origin-specific headers that shouldn't be forwarded
       requestHeaders.delete("origin");
       requestHeaders.delete("referer");
-      
+
       // Get request body for non-GET/HEAD methods
       let requestBody = null;
       if (request.method !== "GET" && request.method !== "HEAD") {
