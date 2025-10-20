@@ -34,16 +34,16 @@ export default {
       // e.g., /api/glbajaj/Login -> /ISIMGLB/Login
       // or /ISIMGLB/Login -> /ISIMGLB/Login (direct path, for handling redirects)
       let path;
-      if (url.pathname.startsWith('/api/glbajaj')) {
+      if (url.pathname.startsWith("/api/glbajaj")) {
         path = url.pathname.replace(/^\/api\/glbajaj/, "/ISIMGLB");
-      } else if (url.pathname.startsWith('/ISIMGLB')) {
+      } else if (url.pathname.startsWith("/ISIMGLB")) {
         path = url.pathname; // Keep as is
       } else {
-        return new Response("Not Found - Invalid path", { 
+        return new Response("Not Found - Invalid path", {
           status: 404,
           headers: {
             "Access-Control-Allow-Origin": origin,
-          }
+          },
         });
       }
 
@@ -74,20 +74,20 @@ export default {
         console.log(`Original redirect location: ${location}`);
 
         // Convert absolute URLs to use the proxy path
-        if (location.includes('glbg.servergi.com')) {
+        if (location.includes("glbg.servergi.com")) {
           try {
             const locationUrl = new URL(location);
             // Rewrite /ISIMGLB/* to /api/glbajaj/*
-            const newPath = locationUrl.pathname.replace(/^\/ISIMGLB/, '/api/glbajaj');
+            const newPath = locationUrl.pathname.replace(/^\/ISIMGLB/, "/api/glbajaj");
             responseHeaders.location = newPath;
             responseHeaders.Location = newPath;
             console.log(`Rewritten redirect location: ${newPath}`);
           } catch (e) {
-            console.error('Error parsing location URL:', e);
+            console.error("Error parsing location URL:", e);
           }
-        } else if (location.startsWith('/ISIMGLB')) {
+        } else if (location.startsWith("/ISIMGLB")) {
           // Handle relative URLs that start with /ISIMGLB
-          const newPath = location.replace(/^\/ISIMGLB/, '/api/glbajaj');
+          const newPath = location.replace(/^\/ISIMGLB/, "/api/glbajaj");
           responseHeaders.location = newPath;
           responseHeaders.Location = newPath;
           console.log(`Rewritten redirect location: ${newPath}`);
