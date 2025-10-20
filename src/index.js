@@ -21,8 +21,9 @@ export default {
 
     const origin = request.headers.get("Origin");
 
-    // Check if origin is allowed
-    if (!allowedOrigins.includes(origin)) {
+    // Check if origin is allowed (also allow if no origin header for direct requests)
+    if (origin && !allowedOrigins.includes(origin)) {
+      console.log(`Blocked origin: ${origin}`);
       return new Response("Forbidden - Origin not allowed", { status: 403 });
     }
 
@@ -95,7 +96,8 @@ function handleCORS(request) {
 
   const origin = request.headers.get("Origin");
 
-  if (!allowedOrigins.includes(origin)) {
+  if (origin && !allowedOrigins.includes(origin)) {
+    console.log(`CORS blocked origin: ${origin}`);
     return new Response("Forbidden", { status: 403 });
   }
 
