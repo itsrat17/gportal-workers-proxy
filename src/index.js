@@ -31,8 +31,8 @@ export default {
       const url = new URL(request.url);
 
       // Extract the path after /api/glbajaj
-      // e.g., /api/glbajaj/Login -> /ISIMGLB/Login
-      const path = url.pathname.replace(/^\/api\/glbajaj/, "/ISIMGLB");
+      // e.g., /api/glbajaj/Login -> /gportal/ISIMGLB/Login
+      const path = url.pathname.replace(/^\/api\/glbajaj/, "/gportal/ISIMGLB");
 
       // Construct the target URL
       const targetUrl = `https://glbg.servergi.com:8072${path}${url.search}`;
