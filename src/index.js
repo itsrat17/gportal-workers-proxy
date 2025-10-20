@@ -14,6 +14,7 @@ export default {
     // Configure allowed origins (update these with your domains)
     const allowedOrigins = [
       "https://yashmalik.tech",
+      "https://gportal.yashmalik.tech",
       "https://codeblech.github.io",
       "http://localhost:5173", // Local development
       "http://localhost:4173", // Vite preview
@@ -147,6 +148,7 @@ export default {
 function handleCORS(request) {
   const allowedOrigins = [
     "https://yashmalik.tech",
+    "https://gportal.yashmalik.tech",
     "https://codeblech.github.io",
     "http://localhost:5173",
     "http://localhost:4173",
