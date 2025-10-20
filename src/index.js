@@ -76,15 +76,9 @@ export default {
       // Make the request to the target server
       const response = await fetch(modifiedRequest);
 
-      // Check if the response is binary (e.g., an image)
-      const contentType = response.headers.get("content-type") || "";
-      const isBinary =
-        contentType.includes("image/") ||
-        contentType.includes("application/octet-stream") ||
-        contentType.includes("application/pdf");
-
-      // Get the response body - use arrayBuffer for binary content
-      const body = isBinary ? await response.arrayBuffer() : await response.text();
+      // Always get response as arrayBuffer to preserve Content-Type header
+      // (using text() or other methods causes Response constructor to override Content-Type)
+      const body = await response.arrayBuffer();
 
       // Rewrite Location header for redirects to use the proxy path
       let rewrittenLocation = null;
@@ -110,14 +104,12 @@ export default {
         }
       }
 
-      // Build response headers - preserve original headers and add CORS
+      // Build response headers - preserve original headers and add minimal CORS
       const finalHeaders = new Headers(response.headers);
+
+      // Only add the essential CORS headers needed for actual responses
       finalHeaders.set("Access-Control-Allow-Origin", origin || "*");
-      finalHeaders.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-      finalHeaders.set("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie");
       finalHeaders.set("Access-Control-Allow-Credentials", "true");
-      finalHeaders.set("Access-Control-Max-Age", "86400");
-      finalHeaders.set("Access-Control-Expose-Headers", "Set-Cookie");
 
       // Update Location header if it was rewritten
       if (rewrittenLocation) {
