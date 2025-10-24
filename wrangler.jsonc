@@ -4,7 +4,7 @@
  */
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "gportal-proxy-server",
+  "name": "proxy-server",
   "main": "src/index.js",
   "compatibility_date": "2025-04-03",
   "observability": {
